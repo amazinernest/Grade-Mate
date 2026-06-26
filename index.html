@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GradeMate — Smart Assignment Marking for Academics</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f4f0;--surface:#fff;--s2:#eeede8;--s3:#e5e3dc;
+  --border:#dddbd2;--bs:#c4c2b8;
+  --text:#18180f;--muted:#65635a;--hint:#9b9890;
+  --blue:#1a5fb4;--bluebg:#e8f0fc;--bluel:#dce8fb;
+  --green:#0a6b3e;--greenbg:#e3f5ed;
+  --red:#a02020;--redbg:#fceaea;
+  --amber:#7a4d00;--amberbg:#fef3dc;
+  --orange:#c45000;--orangebg:#fff0e6;
+  --r:12px;--rs:7px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;min-height:100vh}
+
+/* Header */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--blue),#3b82f6);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0}
+.logo-text{font-size:16px;font-weight:700;color:var(--text)}.logo-sub{font-size:11px;color:var(--muted)}
+.hright{margin-left:auto;display:flex;gap:8px;align-items:center}
+.course-pill{background:var(--bluebg);color:var(--blue);font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;display:none;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step-dots{display:flex;gap:5px;align-items:center}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .2s}
+.sdot.active{background:var(--blue)}.sdot.done{background:var(--green)}
+
+/* Layout */
+main{max-width:960px;margin:0 auto;padding:32px 20px 80px}
+.step{display:none}.step.active{display:block}
+.ptitle{font-size:22px;font-weight:700;margin-bottom:6px}
+.psub{font-size:14px;color:var(--muted);margin-bottom:26px}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card-title{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title i{color:var(--blue)}
+.card-title .ctright{margin-left:auto;font-size:12px;font-weight:400}
+
+/* Form */
+label.fl{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:5px}
+.req{color:var(--red);margin-left:2px}
+input[type=text],input[type=number],select,textarea{width:100%;border:1px solid var(--bs);border-radius:var(--rs);padding:9px 12px;font-size:14px;font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);transition:border-color .15s}
+input[type=text]:focus,input[type=number]:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,95,180,.1)}
+input.err,textarea.err{border-color:var(--red)!important}
+.err-msg{font-size:12px;color:var(--red);margin-top:4px;display:none}
+textarea{resize:vertical;min-height:100px;line-height:1.6}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.fg{margin-bottom:16px}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;background:var(--s2);border-radius:var(--rs);padding:3px;margin-bottom:16px;width:fit-content}
+.tab{padding:7px 16px;border-radius:5px;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
+.tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* Criteria builder */
+.crit-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.crit-row{display:grid;grid-template-columns:1fr 80px auto;gap:8px;align-items:start;padding:12px;background:var(--s2);border-radius:var(--rs);border:1px solid var(--border)}
+.crit-row textarea{min-height:64px;font-size:13px;background:var(--surface)}
+.crit-row input[type=number]{text-align:center;padding:7px 4px;font-size:14px}
+.crit-del{background:none;border:none;cursor:pointer;color:var(--muted);padding:6px;border-radius:4px;font-size:14px;align-self:flex-start;margin-top:2px}
+.crit-del:hover{color:var(--red);background:var(--redbg)}
+.crit-sum{font-size:13px;color:var(--muted);margin-top:8px}
+.crit-sum.mismatch{color:var(--red);font-weight:600}
+
+/* Upload zones */
+.upload-zone{border:2px dashed var(--bs);border-radius:var(--r);padding:34px 22px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface)}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--blue);background:var(--bluel)}
+.upload-zone i{font-size:30px;color:var(--hint);display:block;margin-bottom:9px}
+.upload-zone h3{font-size:14px;font-weight:600;margin-bottom:3px}
+.upload-zone p{font-size:12px;color:var(--muted)}
+.upload-zone input{display:none}
+.fmts{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:9px}
+.fmt{font-size:11px;background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:2px 8px;color:var(--muted)}
+
+/* File list */
+.file-list{margin-top:12px;display:flex;flex-direction:column;gap:5px}
+.fitem{display:flex;align-items:center;gap:9px;padding:8px 11px;background:var(--s2);border-radius:var(--rs);font-size:13px}
+.fitem i{color:var(--blue);flex-shrink:0;width:14px}
+.fitem .fn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fitem .fsz{font-size:11px;color:var(--muted);white-space:nowrap}
+.fitem .fst{font-size:12px;font-weight:500;white-space:nowrap}
+
+/* Badges */
+.badge{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.b-blue{background:var(--bluebg);color:var(--blue)}.b-green{background:var(--greenbg);color:var(--green)}
+.b-red{background:var(--redbg);color:var(--red)}.b-amber{background:var(--amberbg);color:var(--amber)}
+.b-orange{background:var(--orangebg);color:var(--orange)}
+
+/* Flags */
+.flags{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.fbanner{display:flex;align-items:flex-start;gap:9px;padding:9px 12px;border-radius:var(--rs);font-size:13px;line-height:1.5}
+.fbanner i{margin-top:2px;flex-shrink:0}
+.fai{background:var(--amberbg);border:1px solid #e8c060;color:var(--amber)}
+.fdup{background:var(--orangebg);border:1px solid #f0a060;color:var(--orange)}
+.fwc{background:var(--redbg);border:1px solid #f0a0a0;color:var(--red)}
+.fclean{background:var(--greenbg);border:1px solid #80d0a8;color:var(--green)}
+
+/* Rubric */
+.rubric-row{padding:12px 0;border-bottom:1px solid var(--border)}
+.rubric-row:last-of-type{border-bottom:none}
+.rrow-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
+.rlabel{font-size:13px;line-height:1.5;font-weight:500;flex:1}
+.rmax-tag{font-size:12px;color:var(--hint);white-space:nowrap;padding-top:2px}
+.auto-hint{font-size:12px;border-radius:var(--rs);padding:7px 10px;margin-bottom:7px;line-height:1.5}
+.h-good{background:var(--greenbg);border:1px solid #80d0a8;color:var(--green)}
+.h-partial{background:var(--amberbg);border:1px solid #e8c060;color:var(--amber)}
+.h-weak{background:var(--redbg);border:1px solid #f0a0a0;color:var(--red)}
+.kchips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px}
+.kchip{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500}
+.kfound{background:var(--greenbg);color:var(--green)}.kmiss{background:var(--redbg);color:var(--red)}
+.score-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.qbtn{padding:5px 11px;border:1px solid var(--bs);border-radius:var(--rs);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer;transition:all .12s;font-family:'Inter',sans-serif}
+.qbtn:hover{background:var(--s2)}.qbtn.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
+.sinput{width:64px;text-align:center;padding:6px 4px;border:1px solid var(--bs);border-radius:var(--rs);font-size:13px;font-family:'Inter',sans-serif;color:var(--text);background:var(--surface)}
+.sinput:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,95,180,.1)}
+.sinput.over{border-color:var(--red)}
+
+/* Total bar */
+.total-bar{display:flex;justify-content:space-between;align-items:center;background:var(--s2);border-radius:var(--rs);padding:12px 16px;margin-top:14px;border:1px solid var(--border)}
+.tlbl{font-size:13px;font-weight:500}
+.tval{font-size:22px;font-weight:700}
+.tval.pass{color:var(--green)}.tval.fail{color:var(--red)}
+.fb-lbl{font-size:12px;color:var(--muted);margin:14px 0 5px;font-weight:500}
+.fb-area{width:100%;border:1px solid var(--bs);border-radius:var(--rs);padding:9px 11px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);resize:vertical;min-height:75px;line-height:1.6}
+.fb-area:focus{outline:none;border-color:var(--blue)}
+
+/* Student card */
+.card-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.sname{font-size:17px;font-weight:700}.smeta{font-size:12px;color:var(--muted);margin-top:2px}
+.resp-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--hint);margin-bottom:5px}
+.resp-box{background:var(--s2);border-radius:var(--rs);padding:10px 13px;font-size:13px;line-height:1.7;color:var(--muted);max-height:180px;overflow-y:auto;white-space:pre-wrap;margin-bottom:14px;border:1px solid var(--border)}
+.sec-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--hint);margin-bottom:10px}
+
+/* Zero flagged bar */
+.flag-action-bar{display:flex;align-items:center;gap:10px;background:var(--redbg);border:1px solid #f0a0a0;border-radius:var(--rs);padding:9px 13px;margin-bottom:14px;font-size:13px;color:var(--red)}
+
+/* Jump to student */
+.jump-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.jump-bar input{max-width:220px;padding:7px 10px;font-size:13px}
+.jump-bar select{max-width:260px;padding:7px 10px;font-size:13px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:1px solid var(--bs);border-radius:var(--rs);background:var(--surface);color:var(--text);font-size:14px;font-family:'Inter',sans-serif;font-weight:500;cursor:pointer;text-decoration:none;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--s2)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--text);color:#fff;border-color:var(--text)}.btn-primary:hover{opacity:.85;background:var(--text)}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green)}.btn-green:hover{opacity:.85}
+.btn-red{background:var(--red);color:#fff;border-color:var(--red)}.btn-red:hover{opacity:.85}
+.btn-sm{padding:6px 12px;font-size:13px}
+.ml-auto{margin-left:auto}
+.nav-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:20px}
+
+/* Tables */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:9px 11px;border-bottom:2px solid var(--border);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);white-space:nowrap;cursor:pointer;user-select:none}
+.tbl th:hover{color:var(--text)}
+.tbl th.sort-asc::after{content:' ↑'}.tbl th.sort-desc::after{content:' ↓'}
+.tbl td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}.tbl tr:hover td{background:var(--s2)}
+.pass-t{color:var(--green);font-weight:600}.fail-t{color:var(--red);font-weight:600}
+.gpill{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:12px;font-weight:700}
+.gA{background:var(--greenbg);color:var(--green)}.gB{background:var(--bluebg);color:var(--blue)}
+.gC{background:var(--amberbg);color:var(--amber)}.gD{background:#fff3e0;color:#7a4d00}.gF{background:var(--redbg);color:var(--red)}
+
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px}
+.scard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;box-shadow:var(--shadow)}
+.sval{font-size:24px;font-weight:700;display:block}.slbl{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* Progress */
+.prog-wrap{background:var(--border);border-radius:20px;height:6px;margin:10px 0 4px}
+.prog-fill{background:var(--blue);height:6px;border-radius:20px;transition:width .3s}
+
+/* Info/warn boxes */
+.warn-box{background:var(--amberbg);border:1px solid #e8c060;border-radius:var(--rs);padding:11px 14px;font-size:13px;color:var(--amber);margin-bottom:14px}
+.info-box{background:var(--bluebg);border:1px solid #b0ccf0;border-radius:var(--rs);padding:11px 14px;font-size:13px;color:var(--blue);margin-bottom:14px}
+.success-box{background:var(--greenbg);border:1px solid #80d0a8;border-radius:var(--rs);padding:11px 14px;font-size:13px;color:var(--green);margin-bottom:14px}
+
+/* Divider */
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--hint);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Toast notification */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:10px 18px;border-radius:var(--rs);font-size:13px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:999;transform:translateY(80px);opacity:0;transition:all .25s}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* Duplicate severity tiers */
+.dup-low{background:#fff0e6;border:1px solid #f0a060;color:#c45000}
+.dup-med{background:#fceaea;border:1px solid #f07060;color:#8b1a1a}
+.dup-high{background:#4a0000;color:#fff;border:1px solid #2a0000}
+
+/* Duplicate cluster cards */
+.cluster-card{background:var(--surface);border:2px solid var(--red);border-radius:var(--r);padding:16px 18px;margin-bottom:12px}
+.cluster-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.cluster-badge{background:var(--red);color:#fff;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px}
+.cluster-members{display:flex;flex-direction:column;gap:6px}
+.cluster-member{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;background:var(--s2);border-radius:var(--rs);font-size:13px;flex-wrap:wrap}
+.sim-bar-wrap{flex:1;min-width:80px;background:var(--border);border-radius:20px;height:6px;overflow:hidden}
+.sim-bar{height:6px;border-radius:20px}
+.sim-low{background:#f0a060}.sim-med{background:#e05050}.sim-high{background:#a02020}
+
+/* Side-by-side comparison modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--surface);border-radius:var(--r);box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-width:1100px;margin:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);padding:4px 8px;border-radius:var(--rs)}
+.modal-close:hover{background:var(--s2);color:var(--text)}
+.modal-body{padding:16px 20px}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.compare-panel{display:flex;flex-direction:column;gap:8px}
+.compare-name{font-size:14px;font-weight:700;padding:8px 12px;border-radius:var(--rs);color:#fff}
+.cn-a{background:var(--blue)}.cn-b{background:var(--red)}
+.compare-text{background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:12px;font-size:12px;line-height:1.8;color:var(--muted);max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+.compare-text mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
+.sim-summary{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--redbg);border:1px solid #f0a0a0;border-radius:var(--rs);margin-bottom:14px;font-size:13px;flex-wrap:wrap}
+.sim-big{font-size:28px;font-weight:700;color:var(--red)}
+
+@media(max-width:680px){
+  .compare-grid{grid-template-columns:1fr}
+  .modal-overlay{padding:0}
+  .modal-box{border-radius:0;min-height:100vh}
+}
+
+/* ── Responsive ── */
+
+/* Tablet (≤768px) */
+@media(max-width:768px){
+  header{padding:0 16px}
+  main{padding:22px 16px 60px}
+  .frow{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .card{padding:18px}
+  /* Nav bar: primary actions stay, secondary wraps */
+  .nav-bar{flex-wrap:wrap;gap:8px}
+  .nav-bar .ml-auto{margin-left:0;width:100%}
+  .nav-bar .ml-auto .btn{width:100%;justify-content:center}
+  /* Tables scroll horizontally */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tbl{min-width:500px}
+  /* Criteria builder */
+  .crit-row{grid-template-columns:1fr auto auto}
+  /* Card title right section stacks */
+  .card-title{flex-wrap:wrap;gap:6px}
+  .ctright{width:100%;margin-left:0}
+  /* Upload zone smaller */
+  .upload-zone{padding:28px 18px}
+}
+
+/* Mobile (≤480px) */
+@media(max-width:480px){
+  /* Header */
+  header{height:50px;gap:8px;padding:0 12px}
+  .logo-sub{display:none}
+  .logo-text{font-size:13px}
+  .logo-icon{width:30px;height:30px;font-size:13px}
+  .course-pill{max-width:140px;font-size:11px}
+  .step-dots{gap:4px}
+  .sdot{width:6px;height:6px}
+
+  /* Layout */
+  main{padding:14px 10px 50px}
+  .ptitle{font-size:18px}
+  .psub{font-size:13px;margin-bottom:18px}
+  .card{padding:13px;border-radius:var(--rs)}
+
+  /* Form */
+  .frow{grid-template-columns:1fr}
+  .fg{margin-bottom:12px}
+  input[type=text],input[type=number],select,textarea{font-size:14px;padding:8px 10px}
+
+  /* Grade boundary inputs */
+  .card .frow input[style*="max-width:70px"]{max-width:60px!important}
+
+  /* Criteria builder */
+  .crit-row{grid-template-columns:1fr;gap:6px}
+  .crit-row textarea{min-height:56px}
+  .crit-del{position:absolute;top:10px;right:10px}
+  .crit-row{position:relative;padding-right:36px}
+
+  /* Tabs full width */
+  .tabs{width:100%}.tab{flex:1;text-align:center;font-size:12px;padding:6px 8px}
+
+  /* Upload zone */
+  .upload-zone{padding:24px 14px}
+  .upload-zone i{font-size:26px;margin-bottom:7px}
+  .upload-zone h3{font-size:13px}
+  .fmts{gap:3px}
+  .fmt{font-size:10px;padding:2px 6px}
+
+  /* File list */
+  .fitem{padding:7px 9px;font-size:12px}
+  .fitem .fsz{display:none}
+
+  /* Student card */
+  .card-hd{flex-direction:column;gap:5px}
+  .sname{font-size:15px}
+  .smeta{font-size:11px}
+
+  /* Rubric */
+  .rrow-top{flex-wrap:wrap}
+  .rmax-tag{display:none}
+  .rlabel{font-size:12px}
+  .auto-hint{font-size:11px;padding:6px 9px}
+  .score-row{gap:5px}
+  .qbtn{padding:5px 9px;font-size:12px}
+  .sinput{width:58px;height:36px;font-size:13px}
+
+  /* Total bar */
+  .total-bar{flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px}
+  .tval{font-size:20px}
+
+  /* Flags */
+  .fbanner{font-size:12px;padding:7px 10px}
+
+  /* Nav bar — all buttons full width, stacked */
+  .nav-bar{flex-direction:column;gap:7px}
+  .nav-bar .btn{width:100%;justify-content:center;padding:11px 14px;font-size:14px}
+  .ml-auto{margin-left:0}
+
+  /* Jump bar */
+  .jump-bar{flex-wrap:wrap;gap:6px}
+  .jump-bar select{width:100%;max-width:100%}
+
+  /* Stat grid */
+  .stat-grid{grid-template-columns:1fr 1fr;gap:7px}
+  .sval{font-size:20px}
+  .slbl{font-size:10px}
+
+  /* Results search */
+  #res-search{max-width:100%!important;width:100%}
+  .card-title{flex-direction:column;align-items:flex-start;gap:8px}
+  .ctright{width:100%}
+
+  /* Tables */
+  .tbl th,.tbl td{padding:7px 8px;font-size:12px}
+  .tbl{min-width:460px}
+
+  /* Toast */
+  .toast{bottom:14px;right:14px;left:14px;text-align:center}
+}
+
+/* Very small (≤360px) */
+@media(max-width:360px){
+  header{padding:0 10px}
+  main{padding:12px 8px 44px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .qbtn{padding:4px 7px;font-size:11px}
+  .sinput{width:52px}
+}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<header>
+  <div class="logo" onclick="resetApp()">
+    <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
+    <div><div class="logo-text">GradeMate</div><div class="logo-sub">Smart Assignment Marking for Academics</div></div>
+  </div>
+  <div class="hright">
+    <div class="course-pill" id="course-pill"></div>
+    <div class="step-dots" id="step-dots"></div>
+  </div>
+</header>
+
+<main>
+
+<!-- STEP 1: SETUP -->
+<div id="step-setup" class="step active">
+  <h1 class="ptitle">Course setup</h1>
+  <p class="psub">Enter your course details and define your marking criteria. Fields marked <span style="color:var(--red)">*</span> are required.</p>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-university"></i> Course information</div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Course code <span class="req">*</span></label><input type="text" id="course-code" placeholder="e.g. EDF 423"><div class="err-msg" id="err-code">Please enter the course code.</div></div>
+      <div class="fg"><label class="fl">Course title <span class="req">*</span></label><input type="text" id="course-title" placeholder="e.g. Behaviour Modification"><div class="err-msg" id="err-title">Please enter the course title.</div></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Lecturer name</label><input type="text" id="lecturer-name" placeholder="e.g. Dr. O. Adeyemi"></div>
+      <div class="fg"><label class="fl">Academic session</label><input type="text" id="session" placeholder="e.g. 2025/2026"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Assignment title</label><input type="text" id="assignment-title" placeholder="e.g. Assignment 1 — Behaviour Modification"></div>
+      <div class="fg"><label class="fl">Department / Faculty</label><input type="text" id="department" placeholder="e.g. Educational Foundations"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Total marks <span class="req">*</span></label><input type="number" id="total-marks" value="20" min="1" max="100"><div class="err-msg" id="err-marks">Please enter total marks.</div></div>
+      <div class="fg"><label class="fl">Pass mark <span class="req">*</span></label><input type="number" id="pass-mark" value="10" min="1" max="100"></div>
+    </div>
+    <div class="frow">
+      <div class="fg">
+        <label class="fl">Grade boundaries <span style="font-weight:400;color:var(--hint)">(% thresholds: A / B / C / D)</span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="grade-a" value="70" min="1" max="99" style="max-width:70px" title="A from %">
+          <input type="number" id="grade-b" value="55" min="1" max="99" style="max-width:70px" title="B from %">
+          <input type="number" id="grade-c" value="45" min="1" max="99" style="max-width:70px" title="C from %">
+          <input type="number" id="grade-d" value="35" min="1" max="99" style="max-width:70px" title="D from %">
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">A ≥ first value · B ≥ second · C ≥ third · D ≥ fourth · F below</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-list-check"></i> Marking criteria <div class="ctright" id="crit-sum-header"></div></div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Add one row per marking criterion with its label and maximum marks. Or upload your marking guide file and the app extracts the criteria for you.</p>
+
+    <div class="tabs">
+      <button class="tab active" id="tab-type" onclick="switchTab('type')"><i class="fas fa-keyboard"></i> Type criteria</button>
+      <button class="tab" id="tab-upload" onclick="switchTab('upload')"><i class="fas fa-file-upload"></i> Upload guide</button>
+    </div>
+
+    <div id="panel-type">
+      <div class="info-box" style="font-size:12px"><i class="fas fa-info-circle"></i> Tip: In the criterion label, describe exactly what earns full marks, partial marks, and zero. The more specific you are, the better the auto-scoring works.</div>
+      <div class="crit-list" id="crit-list"></div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="addCrit()"><i class="fas fa-plus"></i> Add criterion</button>
+        <div class="crit-sum" id="crit-sum"></div>
+      </div>
+    </div>
+
+    <div id="panel-upload" style="display:none">
+      <div class="upload-zone" id="guide-dz" onclick="document.getElementById('guide-fi').click()">
+        <i class="fas fa-file-upload"></i>
+        <h3>Upload your marking guide file</h3>
+        <p>Click or drag and drop here</p>
+        <div class="fmts"><span class="fmt">Word (.docx)</span><span class="fmt">PDF</span><span class="fmt">Plain text</span></div>
+        <input type="file" id="guide-fi" accept=".docx,.pdf,.txt">
+      </div>
+      <div id="guide-status" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+      <div id="guide-extracted" style="display:none;margin-top:12px">
+        <label class="fl">Extracted text — review and edit before continuing</label>
+        <textarea id="guide-text" style="min-height:160px;font-size:13px"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <button class="btn btn-primary" onclick="proceedToUpload()">Continue to submissions <i class="fas fa-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- STEP 2: UPLOAD -->
+<div id="step-upload" class="step">
+  <h1 class="ptitle">Upload submissions</h1>
+  <p class="psub">Upload student submissions in any format. You can mix formats in the same session.</p>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-table"></i> Batch — CSV or Excel</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Google Forms exports, spreadsheet exports — one row per student.</p>
+    <div class="upload-zone" id="csv-dz" onclick="document.getElementById('csv-fi').click()">
+      <i class="fas fa-table"></i><h3>Drop CSV or Excel file here</h3><p>or click to browse</p>
+      <div class="fmts"><span class="fmt">CSV</span><span class="fmt">Excel (.xlsx)</span><span class="fmt">Google Sheets export</span></div>
+      <input type="file" id="csv-fi" accept=".csv,.xlsx,.xls">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-files"></i> Individual files — Word, PDF, or text</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Name each file with the student's name or matric number. Select multiple files at once.</p>
+    <div class="upload-zone" id="files-dz" onclick="document.getElementById('files-fi').click()">
+      <i class="fas fa-cloud-upload-alt"></i><h3>Drop student files here</h3><p>Select multiple files at once</p>
+      <div class="fmts"><span class="fmt">Word (.docx)</span><span class="fmt">PDF</span><span class="fmt">Plain text</span></div>
+      <input type="file" id="files-fi" accept=".docx,.pdf,.txt" multiple>
+    </div>
+    <div id="file-list" class="file-list"></div>
+  </div>
+
+  <div id="upload-err" style="background:var(--redbg);border:1px solid #f0a0a0;border-radius:var(--rs);padding:11px 14px;font-size:13px;color:var(--red);margin-top:4px;display:none"></div>
+
+  <div class="divider">or try with sample data</div>
+  <button class="btn" onclick="loadSample()"><i class="fas fa-flask"></i> Load sample responses</button>
+
+  <div id="sub-count" style="margin-top:14px;display:none">
+    <div class="success-box" id="sub-count-msg"></div>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="students=[];updateSubCount();document.getElementById('file-list').innerHTML='';toast('Submissions cleared.')"><i class="fas fa-trash"></i> Clear all</button>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <button class="btn" onclick="showStep('step-setup')"><i class="fas fa-arrow-left"></i> Back</button>
+    <button class="btn btn-primary" id="btn-to-integrity" onclick="proceedToIntegrity()" disabled>Continue <i class="fas fa-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- STEP 3: INTEGRITY -->
+<div id="step-integrity" class="step">
+  <h1 class="ptitle">Integrity check</h1>
+  <p class="psub" id="int-sub"></p>
+  <div id="int-stats"></div>
+
+  <!-- Duplicate clusters -->
+  <div id="dup-clusters-section" style="display:none">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <h2 style="font-size:16px;font-weight:700;color:var(--red)"><i class="fas fa-clone"></i> Duplicate clusters</h2>
+      <span style="font-size:13px;color:var(--muted)">Groups of students whose submissions are too similar to each other</span>
+    </div>
+    <div id="dup-clusters"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-shield-alt"></i> All submissions
+      <div class="ctright">
+        <button class="btn btn-sm btn-red" onclick="zeroAllFlagged()" id="btn-zero-flagged" style="display:none"><i class="fas fa-times-circle"></i> Zero all flagged</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl" style="min-width:540px">
+        <thead><tr><th onclick="sortInt('name')">Name</th><th>ID / Matric</th><th onclick="sortInt('words')">Words</th><th onclick="sortInt('ai')">AI writing</th><th onclick="sortInt('dup')">Similarity ↓</th><th>Status</th><th></th></tr></thead>
+        <tbody id="int-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="warn-box"><strong><i class="fas fa-exclamation-triangle"></i> Important:</strong> These flags are indicators only — not proof. Always read both submissions before making any decision. Do not zero a submission without reading it first.</div>
+  <div class="nav-bar">
+    <button class="btn" onclick="showStep('step-upload')"><i class="fas fa-arrow-left"></i> Back</button>
+    <button class="btn btn-primary" onclick="runAutoMark()">Run auto marking <i class="fas fa-bolt"></i></button>
+  </div>
+</div>
+
+<!-- Comparison modal -->
+<div class="modal-overlay" id="compare-modal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-balance-scale" style="color:var(--red);margin-right:6px"></i> Side-by-side comparison</div>
+      <button class="modal-close" onclick="closeCompareModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="sim-summary" id="modal-sim-summary"></div>
+      <div class="compare-grid">
+        <div class="compare-panel">
+          <div class="compare-name cn-a" id="modal-name-a"></div>
+          <div class="compare-text" id="modal-text-a"></div>
+        </div>
+        <div class="compare-panel">
+          <div class="compare-name cn-b" id="modal-name-b"></div>
+          <div class="compare-text" id="modal-text-b"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn btn-sm" id="modal-mark-a" onclick="closeCompareModal()"><i class="fas fa-edit"></i> Mark Student A</button>
+        <button class="btn btn-sm" id="modal-mark-b" onclick="closeCompareModal()"><i class="fas fa-edit"></i> Mark Student B</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4: PROGRESS -->
+<div id="step-progress" class="step">
+  <h1 class="ptitle">Marking in progress</h1>
+  <p class="psub">Checking each submission against your marking criteria...</p>
+  <div class="card">
+    <div id="prog-list" style="display:flex;flex-direction:column;gap:7px"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="prog-bar" style="width:0%"></div></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px" id="prog-text">Starting...</div>
+  </div>
+</div>
+
+<!-- STEP 5: MARK -->
+<div id="step-mark" class="step">
+  <div class="jump-bar">
+    <select id="jump-select" onchange="jumpTo(parseInt(this.value))"></select>
+    <span style="font-size:13px;color:var(--muted)" id="mark-progress"></span>
+  </div>
+  <div id="student-card"></div>
+  <div class="nav-bar">
+    <button class="btn" id="btn-prev" onclick="navigate(-1)"><i class="fas fa-arrow-left"></i> Previous</button>
+    <button class="btn btn-primary" id="btn-next" onclick="navigate(1)">Next <i class="fas fa-arrow-right"></i></button>
+    <button class="btn" onclick="showStep('step-integrity')"><i class="fas fa-shield-alt"></i> Integrity</button>
+    <button class="btn ml-auto" onclick="goToResults()"><i class="fas fa-chart-bar"></i> View results</button>
+  </div>
+</div>
+
+<!-- STEP 6: RESULTS -->
+<div id="step-results" class="step">
+  <h1 class="ptitle">Results</h1>
+  <p class="psub" id="res-sub"></p>
+  <div id="res-stats"></div>
+  <div class="card">
+    <div class="card-title"><i class="fas fa-table"></i> Student scores
+      <div class="ctright" style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="res-search" placeholder="Search name..." style="max-width:180px;padding:5px 10px;font-size:13px" oninput="filterResults(this.value)">
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl" id="res-tbl" style="min-width:620px">
+        <thead><tr>
+          <th onclick="sortRes('name')">Name</th>
+          <th onclick="sortRes('matric')">ID / Matric</th>
+          <th onclick="sortRes('score')">Score</th>
+          <th onclick="sortRes('grade')">Grade</th>
+          <th onclick="sortRes('result')">Result</th>
+          <th onclick="sortRes('words')">Words</th>
+          <th onclick="sortRes('ai')">AI flag</th>
+          <th onclick="sortRes('dup')">Duplicate</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="res-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="nav-bar">
+    <button class="btn" onclick="showStep('step-mark')"><i class="fas fa-arrow-left"></i> Back to marking</button>
+    <button class="btn btn-green ml-auto" onclick="exportCSV()"><i class="fas fa-download"></i> Download results (CSV)</button>
+  </div>
+</div>
+
+</main>
+<script>
+/* ═══ STATE ═══ */
+let courseInfo={}, criteria=[], students=[], current=0;
+let scores={}, feedback={}, autoRes={}, integrity=[];
+let guideMode='type', critCount=0;
+let resSort={col:'name',dir:1}, intSort={col:'name',dir:1};
+let resFilter='';
+
+/* ═══ TOAST ═══ */
+function toast(msg, dur=2500){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+/* ═══ STEPS ═══ */
+const ALL_STEPS=['step-setup','step-upload','step-integrity','step-progress','step-mark','step-results'];
+const VIS_STEPS=['step-setup','step-upload','step-integrity','step-mark','step-results'];
+function showStep(id){
+  ALL_STEPS.forEach(s=>document.getElementById(s).classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  renderDots(id); window.scrollTo(0,0);
+}
+function renderDots(activeId){
+  document.getElementById('step-dots').innerHTML=VIS_STEPS.map(s=>{
+    const ai=ALL_STEPS.indexOf(s), aa=ALL_STEPS.indexOf(activeId);
+    return `<div class="sdot ${s===activeId?'active':ai<aa?'done':''}"></div>`;
+  }).join('');
+}
+function resetApp(){
+  if(students.length>0&&!confirm('Reset and start over? All data will be lost.')) return;
+  location.reload();
+}
+renderDots('step-setup');
+
+/* ═══ CRITERIA ═══ */
+function switchTab(mode){
+  guideMode=mode;
+  document.getElementById('tab-type').classList.toggle('active',mode==='type');
+  document.getElementById('tab-upload').classList.toggle('active',mode==='upload');
+  document.getElementById('panel-type').style.display=mode==='type'?'':'none';
+  document.getElementById('panel-upload').style.display=mode==='upload'?'':'none';
+}
+function addCrit(label='',max=5){
+  critCount++;
+  const id='cr'+critCount;
+  const d=document.createElement('div');
+  d.className='crit-row'; d.id=id;
+  d.innerHTML=`
+    <textarea placeholder="Describe what earns full, partial, and zero marks for this criterion." oninput="updateCritSum()">${label}</textarea>
+    <div><label class="fl" style="font-size:11px">Max marks</label><input type="number" min="1" max="100" value="${max}" oninput="updateCritSum()"></div>
+    <button class="crit-del" onclick="document.getElementById('${id}').remove();updateCritSum()" title="Remove criterion"><i class="fas fa-times"></i></button>`;
+  document.getElementById('crit-list').appendChild(d);
+  updateCritSum();
+}
+function getCriteria(){
+  return [...document.querySelectorAll('.crit-row')].map((r,i)=>{
+    const label=r.querySelector('textarea').value.trim();
+    const max=parseInt(r.querySelector('input[type=number]').value)||5;
+    return label?{label,max,key:'c'+i}:null;
+  }).filter(Boolean);
+}
+function updateCritSum(){
+  const crits=getCriteria();
+  const sum=crits.reduce((a,b)=>a+b.max,0);
+  const total=parseInt(document.getElementById('total-marks').value)||20;
+  const el=document.getElementById('crit-sum');
+  const hdr=document.getElementById('crit-sum-header');
+  const mismatch=sum!==total&&crits.length>0;
+  const msg=crits.length?`${crits.length} criteria · ${sum} marks total${mismatch?' ⚠ does not match total marks ('+total+')':''}`:'' ;
+  el.textContent=msg; el.className='crit-sum'+(mismatch?' mismatch':'');
+  hdr.textContent=msg; hdr.style.color=mismatch?'var(--red)':'var(--muted)';
+}
+// Default 3 criteria
+addCrit('',5); addCrit('',5); addCrit('',10);
+
+function parseGuideText(text){
+  const lines=text.split('\n').filter(l=>l.trim());
+  const out=[];
+  lines.forEach(line=>{
+    const l=line.trim();
+    const mks=l.match(/\((\d+)\s*marks?\)|(\d+)\s*marks?\s*:/i)||l.match(/\/\s*(\d+)/);
+    const isCrit=/^[\d\w]\.|^[-•*►]|^\([\d\w]\)/.test(l)||mks;
+    if(isCrit&&l.length>8){
+      const max=mks?parseInt(mks[1]||mks[2]||mks[3])||5:5;
+      out.push({label:l.replace(/\(\d+\s*marks?\)/gi,'').replace(/^\W+/,'').trim(),max,key:'c'+out.length});
+    }
+  });
+  return out.length?out:[{label:text.substring(0,300).trim(),max:parseInt(document.getElementById('total-marks').value)||20,key:'c0'}];
+}
+
+/* ═══ VALIDATION & PROCEED ═══ */
+function setErr(id,errId,show){
+  const el=document.getElementById(id); const em=document.getElementById(errId);
+  el.classList.toggle('err',show); if(em){em.style.display=show?'block':'none';}
+  return show;
+}
+function proceedToUpload(){
+  const code=document.getElementById('course-code').value.trim();
+  const title=document.getElementById('course-title').value.trim();
+  const total=parseInt(document.getElementById('total-marks').value);
+  let err=false;
+  err=setErr('course-code','err-code',!code)||err;
+  err=setErr('course-title','err-title',!title)||err;
+  err=setErr('total-marks','err-marks',!total||total<1)||err;
+  if(err){toast('Please fill in the required fields.');return;}
+
+  if(guideMode==='type'){
+    criteria=getCriteria();
+    if(!criteria.length){toast('Please add at least one marking criterion.');return;}
+    const sum=criteria.reduce((a,b)=>a+b.max,0);
+    if(sum!==total&&!confirm(`Your criteria total ${sum} marks but the assignment total is ${total} marks. Continue anyway?`)) return;
+  } else {
+    const txt=document.getElementById('guide-text').value.trim();
+    if(!txt){toast('Please upload a marking guide file or switch to "Type criteria".');return;}
+    criteria=parseGuideText(txt);
+    if(!criteria.length){toast('Could not extract criteria. Please switch to "Type criteria".');return;}
+  }
+
+  courseInfo={
+    code, title,
+    lecturer:document.getElementById('lecturer-name').value.trim(),
+    session:document.getElementById('session').value.trim(),
+    assignment:document.getElementById('assignment-title').value.trim()||'Assignment',
+    department:document.getElementById('department').value.trim(),
+    totalMarks:total,
+    passMark:parseInt(document.getElementById('pass-mark').value)||Math.round(total/2),
+    grades:{a:parseInt(document.getElementById('grade-a').value)||70,b:parseInt(document.getElementById('grade-b').value)||55,c:parseInt(document.getElementById('grade-c').value)||45,d:parseInt(document.getElementById('grade-d').value)||35}
+  };
+  document.getElementById('course-pill').textContent=`${code} — ${courseInfo.assignment}`;
+  document.getElementById('course-pill').style.display='block';
+  showStep('step-upload');
+}
+
+/* ═══ FILE READING ═══ */
+async function readFile(file){
+  return new Promise(resolve=>{
+    if(file.name.match(/\.txt$/i)){
+      const r=new FileReader(); r.onload=e=>resolve(e.target.result||''); r.readAsText(file);
+    } else if(file.name.match(/\.docx$/i)){
+      const r=new FileReader();
+      r.onload=e=>{
+        try{
+          const bytes=new Uint8Array(e.target.result);
+          const str=new TextDecoder('utf-8').decode(bytes);
+          const runs=str.match(/<w:t[^>]*>([^<]*)<\/w:t>/g)||[];
+          resolve(runs.map(m=>m.replace(/<[^>]+>/g,'')).join(' ').replace(/\s+/g,' ').trim()||'[Word file: no text extracted]');
+        }catch{resolve('[Error reading Word file]');}
+      };
+      r.readAsArrayBuffer(file);
+    } else if(file.name.match(/\.pdf$/i)){
+      const r=new FileReader();
+      r.onload=e=>{
+        try{
+          const bytes=new Uint8Array(e.target.result);
+          const str=new TextDecoder('latin1').decode(bytes);
+          const chunks=[];
+          const re=/\(([^)]{2,200})\)\s*T[jJ]/g; let m;
+          while((m=re.exec(str))!==null) chunks.push(m[1].replace(/\\(\d{3})/g,(_,o)=>String.fromCharCode(parseInt(o,8))));
+          const text=chunks.join(' ').replace(/\s+/g,' ').trim();
+          resolve(text||'[PDF: limited text extraction. Use Word or txt for best results.]');
+        }catch{resolve('[Error reading PDF]');}
+      };
+      r.readAsArrayBuffer(file);
+    } else {
+      const r=new FileReader(); r.onload=e=>resolve(e.target.result||''); r.readAsText(file);
+    }
+  });
+}
+function nameFromFile(fn){return fn.replace(/\.(docx|pdf|txt)$/i,'').replace(/[-_]+/g,' ').replace(/\d{5,}/g,'').trim()||fn;}
+
+/* ═══ CSV PARSING ═══ */
+function csvLine(line){const r=[];let c='',q=false;for(const ch of line){if(ch==='"'){q=!q;continue;}if(ch===','&&!q){r.push(c.trim());c='';continue;}c+=ch;}r.push(c.trim());return r;}
+function parseCSV(text){const lines=text.trim().split('\n');if(lines.length<2) return [];const h=csvLine(lines[0]);return lines.slice(1).filter(l=>l.trim()).map(l=>{const v=csvLine(l),o={};h.forEach((k,i)=>o[k]=v[i]||'');return o;});}
+function findField(row,kws){for(const k of Object.keys(row)){if(kws.some(kw=>k.toLowerCase().includes(kw))) return row[k];}return '';}
+function longestField(row){return Object.values(row).reduce((a,b)=>b.length>a.length?b:a,'');}
+
+/* ═══ UPLOAD HANDLING ═══ */
+function updateSubCount(){
+  const n=students.length;
+  const el=document.getElementById('sub-count');
+  const msg=document.getElementById('sub-count-msg');
+  if(n>0){msg.innerHTML=`<i class="fas fa-check-circle"></i> <strong>${n}</strong> submission${n>1?'s':''} loaded and ready.`;el.style.display='block';}
+  else el.style.display='none';
+  document.getElementById('btn-to-integrity').disabled=n===0;
+}
+async function processCSV(file){
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const rows=parseCSV(e.target.result);
+      if(!rows.length){showUploadErr('No data rows found.');return;}
+      rows.forEach((row,i)=>students.push({name:findField(row,['name','student','full'])||`Student ${students.length+1}`,matric:findField(row,['matric','reg','number','id']),response:longestField(row),source:'csv'}));
+      toast(`${rows.length} submissions loaded from CSV.`);
+      updateSubCount();
+    }catch{showUploadErr('Could not read file.');}
+  };
+  r.readAsText(file);
+}
+async function processFiles(files){
+  const list=document.getElementById('file-list');
+  for(const file of files){
+    const fid='f'+Date.now()+Math.random().toString(36).substr(2,4);
+    const item=document.createElement('div'); item.className='fitem'; item.id=fid;
+    const icon=file.name.endsWith('.pdf')?'file-pdf':file.name.endsWith('.docx')?'file-word':'file-alt';
+    item.innerHTML=`<i class="fas fa-${icon}"></i><span class="fn">${file.name}</span><span class="fsz">${(file.size/1024).toFixed(0)}KB</span><span class="fst" id="fs-${fid}"><i class="fas fa-spinner fa-spin" style="color:var(--blue)"></i></span>`;
+    list.appendChild(item);
+    const text=await readFile(file);
+    students.push({name:nameFromFile(file.name),matric:'',response:text,source:'file',filename:file.name});
+    document.getElementById('fs-'+fid).innerHTML='<span style="color:var(--green)"><i class="fas fa-check"></i> Loaded</span>';
+    updateSubCount();
+  }
+}
+function showUploadErr(m){const el=document.getElementById('upload-err');el.textContent=m;el.style.display='block';}
+
+async function processGuideFile(file){
+  document.getElementById('guide-status').innerHTML='<i class="fas fa-spinner fa-spin" style="color:var(--blue)"></i> Reading file...';
+  const text=await readFile(file);
+  document.getElementById('guide-text').value=text;
+  document.getElementById('guide-extracted').style.display='block';
+  document.getElementById('guide-status').innerHTML=`<span style="color:var(--green)"><i class="fas fa-check"></i> Loaded — ${text.length} characters. Review and edit above, then continue.</span>`;
+}
+
+/* ═══ SAMPLE DATA ═══ */
+function loadSample(){
+  if(students.length>0&&!confirm('This will add sample submissions to your existing list. Continue?')) return;
+  students.push(
+    {name:'Adaeze Okonkwo',matric:'EDF/2021/045',response:'I observed a behaviour problem at a secondary school in Lagos where students consistently refuse to submit assignments on time. The behaviour is that students arrive to class on at least four out of five lesson days without their written work. This happens across all SS classes during morning periods every day. The antecedent is the assignment deadline when students arrive to class. The behaviour is non-submission and excuse-giving. The consequence is that the teacher shows frustration but no real cost falls on the student, so the behaviour is maintained by the absence of negative consequence. Using operant conditioning principles, I selected positive reinforcement as my primary technique because the ABC analysis shows the current environment provides no reward for compliance. I would implement a merit board in the classroom where each timely submission earns a visible point. Students with five consecutive submissions receive a commendation letter sent home. One obstacle is that teachers in Nigerian public schools are overstretched and may not maintain the merit board consistently. I would adjust by assigning a class captain responsibility for the board. This assignment taught me that behaviour modification requires environmental consistency and Nigerian schools rarely provide that.',source:'sample'},
+    {name:'Chukwuemeka Eze',matric:'EDF/2021/032',response:"Emeka's situation clearly illustrates Bandura's social learning theory. The models in his life have demonstrated that effort does not lead to academic success. His three friends who dropped out and his older brother who failed WAEC twice are his most proximate models. Bandura showed we learn readily from models similar to us. When Emeka tells his counsellor that even if he tries he will still fail, this reflects low self-efficacy — a task-specific belief about inability to succeed at a given task. A counsellor must address self-efficacy before any modelling intervention because without belief in possibility of success, observation alone will not lead to performance. For the Acquisition phase I would introduce a counter-model of similar background who succeeded academically. For the Performance phase I would ensure vicarious reinforcement is clearly visible. One limitation in a Nigerian school is that suitable peer models who succeeded are often no longer physically accessible having moved to university. I would adapt by using recorded video testimonies from former students instead.",source:'sample'},
+    {name:'Blessing Nwosu',matric:'EDF/2021/078',response:'During morning assembly every weekday at a public school in Surulere Lagos approximately 65 to 70 percent of SS1 students talk and move around rather than paying attention to announcements. This happens for the full 15 minutes five days a week. The antecedent is the unstructured assembly setting with minimal direct supervision. The consequence is immediate social reward from peers with no negative consequence from teachers. The behaviour is maintained because it is positively reinforced by peer attention daily. Ogundele and Adeyemi (2019) in the Nigerian Journal of Educational Research found unstructured group settings produce higher off-task behaviour supporting my ABC analysis. Fareo (2012) found similar patterns in Kwara State secondary schools. I would use token economy and extinction to address this. One Nigerian-specific obstacle is that teachers use assembly time to prepare lessons so are absent from supervision. I would create a rotating staff supervision rota as adjustment. This assignment showed me that textbook behaviour modification assumes staff consistency that Nigerian schools cannot always guarantee.',source:'sample'}
+  );
+  toast('3 sample submissions loaded.');
+  updateSubCount();
+}
+
+/* ═══ INTEGRITY ═══ */
+const AI_W=['delve','underscore','foundational','nuanced','seminal','pivotal','paramount','robust','transformative','holistic','multifaceted','leverage','utilize','facilitate','commence','endeavor','furthermore','moreover','tapestry','cornerstone','linchpin'];
+const AI_P=[/\bit is (worth noting|important to note|crucial to)\b/gi,/\bthis (highlights|underscores|demonstrates|showcases)\b/gi,/\bplays? (a|an) (crucial|pivotal|vital|key) role\b/gi,/\b(in conclusion|to summarize),?\b/gi,/\b(furthermore|moreover|additionally),?\b/gi];
+function detectAI(text){
+  const t=text.toLowerCase(),wc=t.split(/\s+/).filter(w=>w).length;
+  if(wc<60) return{score:0,hits:[],wc};
+  let hits=[];
+  AI_W.forEach(w=>{const m=text.match(new RegExp('\\b'+w+'\\b','gi'));if(m) hits.push(`"${w}"×${m.length}`)});
+  AI_P.forEach(re=>{const m=text.match(re);if(m) hits.push(`"${m[0].toLowerCase()}"`)});
+  const sents=text.split(/[.!?]+/).filter(s=>s.trim().length>20);
+  if(sents.length>=5){const lens=sents.map(s=>s.trim().split(/\s+/).length),avg=lens.reduce((a,b)=>a+b,0)/lens.length,cv=Math.sqrt(lens.reduce((a,b)=>a+Math.pow(b-avg,2),0)/lens.length)/avg;if(cv<0.25) hits.push('Uniform sentence lengths');}
+  return{score:Math.min(100,hits.length*9),hits:[...new Set(hits)],wc};
+}
+function tokenize(t){return t.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(w=>w.length>2)}
+function tris(toks){const s=new Set();for(let i=0;i<toks.length-2;i++) s.add(toks[i]+'_'+toks[i+1]+'_'+toks[i+2]);return s}
+function jaccard(a,b){if(!a.size||!b.size) return 0;let n=0;a.forEach(x=>{if(b.has(x)) n++});return n/(a.size+b.size-n)}
+
+// Shared trigrams — returns the actual shared 3-word sequences
+function sharedTrigrams(a,b){const shared=[];a.forEach(x=>{if(b.has(x)) shared.push(x.replace(/_/g,' '))});return shared;}
+
+function dupTier(sim){
+  if(sim>=80) return {label:'Almost identical',cls:'dup-high',barCls:'sim-high'};
+  if(sim>=60) return {label:'Likely copied',cls:'dup-med',barCls:'sim-med'};
+  return {label:'Suspicious',cls:'dup-low',barCls:'sim-low'};
+}
+
+function runIntegrity(){
+  const tc=students.map(s=>tris(tokenize(s.response||'')));
+
+  // Build full similarity matrix — store ALL matches above threshold, not just max
+  integrity=students.map((s,i)=>{
+    const matches=[];
+    for(let j=0;j<students.length;j++){
+      if(j===i) continue;
+      const sim=jaccard(tc[i],tc[j]);
+      if(sim>=0.30) matches.push({idx:j, name:students[j].name, sim:Math.round(sim*100)});
+    }
+    matches.sort((a,b)=>b.sim-a.sim);
+    const topSim = matches.length ? matches[0].sim : 0;
+    const topIdx = matches.length ? matches[0].idx : -1;
+    const topName = matches.length ? matches[0].name : '';
+    const ai=detectAI(s.response||'');
+    return{
+      aiFlag:ai.score>=40, aiScore:ai.score, aiHits:ai.hits, wc:ai.wc,
+      dupFlag:topSim>=35,
+      dupSim:topSim, dupMatch:topName, dupIdx:topIdx,
+      allMatches:matches,  // ALL suspicious matches
+      tc: tc[i]            // store trigram set for comparison
+    };
+  });
+
+  // Build duplicate clusters using Union-Find
+  buildDupClusters();
+}
+
+// ── Duplicate cluster building ────────────────────────────────────────────────
+let dupClusters = [];
+function buildDupClusters(){
+  const n = students.length;
+  const parent = Array.from({length:n},(_,i)=>i);
+  function find(x){while(parent[x]!==x){parent[x]=parent[parent[x]];x=parent[x];}return x;}
+  function union(x,y){parent[find(x)]=find(y);}
+
+  // Union students that share ≥35% similarity
+  for(let i=0;i<n;i++){
+    (integrity[i].allMatches||[]).forEach(m=>{
+      if(m.sim>=35) union(i,m.idx);
+    });
+  }
+
+  // Group by root
+  const groups={};
+  for(let i=0;i<n;i++){
+    const r=find(i);
+    if(!groups[r]) groups[r]=[];
+    groups[r].push(i);
+  }
+
+  // Only keep groups with 2+ members
+  dupClusters = Object.values(groups).filter(g=>g.length>1);
+}
+
+function proceedToIntegrity(){
+  if(!students.length){toast('No submissions loaded.');return;}
+  scores={};feedback={};autoRes={};
+  students.forEach((_,i)=>{scores[i]={};feedback[i]='';});
+  runIntegrity();renderIntegrity();showStep('step-integrity');
+}
+
+let intData=[];
+function renderIntegrity(){
+  const ai=integrity.filter(r=>r.aiFlag).length;
+  const dup=integrity.filter(r=>r.dupFlag).length;
+  const clean=integrity.filter(r=>!r.aiFlag&&!r.dupFlag).length;
+  const highRisk=integrity.filter(r=>r.dupSim>=60).length;
+
+  document.getElementById('int-sub').textContent=`${students.length} submission${students.length>1?'s':''} scanned`;
+  document.getElementById('int-stats').innerHTML=`<div class="stat-grid">
+    <div class="scard"><span class="sval">${students.length}</span><span class="slbl">Total</span></div>
+    <div class="scard"><span class="sval" style="color:var(--amber)">${ai}</span><span class="slbl">AI flagged</span></div>
+    <div class="scard"><span class="sval" style="color:var(--orange)">${dup}</span><span class="slbl">Similarity flagged</span></div>
+    <div class="scard"><span class="sval" style="color:var(--red)">${highRisk}</span><span class="slbl">High risk (≥60%)</span></div>
+    <div class="scard"><span class="sval" style="color:var(--green)">${clean}</span><span class="slbl">Clean</span></div>
+  </div>`;
+
+  if(ai+dup>0) document.getElementById('btn-zero-flagged').style.display='';
+
+  // Render duplicate clusters
+  renderDupClusters();
+
+  // Sort intData by similarity descending by default so worst cases appear first
+  intData=students.map((s,i)=>({...s,...integrity[i],idx:i}));
+  intData.sort((a,b)=>integrity[b.idx].dupSim-integrity[a.idx].dupSim);
+  renderIntTable();
+}
+
+function renderDupClusters(){
+  const sec=document.getElementById('dup-clusters-section');
+  const container=document.getElementById('dup-clusters');
+  if(!dupClusters.length){sec.style.display='none';return;}
+  sec.style.display='block';
+
+  container.innerHTML=dupClusters.map((group,ci)=>{
+    // Find max sim within group
+    let maxSim=0;
+    const pairs=[];
+    for(let a=0;a<group.length;a++){
+      for(let b=a+1;b<group.length;b++){
+        const ia=group[a],ib=group[b];
+        const sim=(integrity[ia].allMatches||[]).find(m=>m.idx===ib)?.sim||0;
+        if(sim>0) pairs.push({ia,ib,sim});
+        if(sim>maxSim) maxSim=sim;
+      }
+    }
+    const tier=dupTier(maxSim);
+    const memberHTML=group.map(idx=>{
+      const s=students[idx];
+      const myMatches=(integrity[idx].allMatches||[]).filter(m=>group.includes(m.idx));
+      const matchLines=myMatches.map(m=>{
+        const t=dupTier(m.sim);
+        return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <i class="fas fa-arrow-right" style="color:var(--red);font-size:11px"></i>
+          <span style="font-size:12px">Same as <strong style="color:var(--red)">${students[m.idx].name}</strong></span>
+          <span class="badge ${t.cls}" style="font-size:11px">${m.sim}% — ${t.label}</span>
+          <button class="btn btn-sm" style="padding:2px 9px;font-size:11px" onclick="openCompare(${idx},${m.idx})"><i class="fas fa-balance-scale"></i> Compare side by side</button>
+        </div>`;
+      }).join('');
+      return `<div class="cluster-member" style="flex-direction:column;align-items:flex-start">
+        <div style="display:flex;align-items:center;gap:8px;width:100%">
+          <i class="fas fa-user-circle" style="color:var(--muted);font-size:16px"></i>
+          <strong style="font-size:14px">${s.name}</strong>
+          <span style="font-size:12px;color:var(--muted)">${s.matric||'no ID'}</span>
+          <button class="btn btn-sm" style="margin-left:auto;padding:3px 10px;font-size:12px" onclick="jumpToAndMark(${idx})"><i class="fas fa-edit"></i> Mark</button>
+        </div>
+        ${matchLines}
+      </div>`;
+    }).join('');
+
+    return `<div class="cluster-card">
+      <div class="cluster-header">
+        <span class="cluster-badge"><i class="fas fa-clone"></i> Group ${ci+1}</span>
+        <span class="badge ${tier.cls}">${tier.label} — up to ${maxSim}% match</span>
+        <span style="font-size:12px;color:var(--muted)">${group.length} students</span>
+      </div>
+      <div class="cluster-members">${memberHTML}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderIntTable(){
+  document.getElementById('int-tbody').innerHTML=intData.map((s)=>{
+    const r=integrity[s.idx];
+    const aiC=r.aiFlag
+      ?`<span class="badge b-amber"><i class="fas fa-robot"></i> ${r.aiScore}%</span>`
+      :'<span class="badge b-green">Clear</span>';
+
+    // Duplicate column — show tier badge + all matches
+    let dupC='<span class="badge b-green">Unique</span>';
+    if(r.dupFlag){
+      const tier=dupTier(r.dupSim);
+      const matchList=(r.allMatches||[]).filter(m=>m.sim>=35).map(m=>`
+        <div style="display:flex;align-items:center;gap:6px;margin-top:5px;padding:5px 8px;background:var(--redbg);border-radius:var(--rs);border:1px solid #f0a0a0">
+          <i class="fas fa-user" style="color:var(--red);font-size:11px;flex-shrink:0"></i>
+          <strong style="font-size:12px;color:var(--red)">${m.name}</strong>
+          <span class="badge ${dupTier(m.sim).cls}" style="font-size:10px">${m.sim}% ${dupTier(m.sim).label}</span>
+          <button class="btn btn-sm" style="padding:2px 8px;font-size:11px;margin-left:auto" onclick="openCompare(${s.idx},${m.idx})"><i class="fas fa-balance-scale"></i> Compare</button>
+        </div>`).join('');
+      dupC=`<div>${matchList}</div>`;
+    }
+
+    const st=(r.aiFlag||r.dupFlag)
+      ?`<span style="color:var(--red);font-weight:600">⚠ Flagged</span>`
+      :`<span style="color:var(--green);font-weight:600">✓ Clean</span>`;
+
+    return `<tr>
+      <td style="font-weight:600">${s.name}</td>
+      <td style="color:var(--muted)">${s.matric||s.filename||'—'}</td>
+      <td style="color:var(--muted)">${r.wc}</td>
+      <td>${aiC}${r.aiFlag?`<div style="font-size:10px;color:var(--muted);margin-top:2px">${r.aiHits.slice(0,2).join(', ')}</div>`:''}</td>
+      <td>${dupC}</td>
+      <td>${st}</td>
+      <td><button class="btn btn-sm" onclick="jumpToAndMark(${s.idx})"><i class="fas fa-edit"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+
+function sortInt(col){
+  intSort.dir = intSort.col===col ? -intSort.dir : 1;
+  intSort.col=col;
+  intData.sort((a,b)=>{
+    const ra=integrity[a.idx], rb=integrity[b.idx];
+    if(col==='name') return intSort.dir*(a.name.localeCompare(b.name));
+    if(col==='words') return intSort.dir*(ra.wc-rb.wc);
+    if(col==='ai') return intSort.dir*(ra.aiScore-rb.aiScore);
+    if(col==='dup') return intSort.dir*(ra.dupSim-rb.dupSim);
+    return 0;
+  });
+  renderIntTable();
+}
+function jumpToAndMark(idx){current=idx;showStep('step-mark');renderStudent();}
+function zeroAllFlagged(){
+  if(!confirm('Set total score to 0 for all flagged submissions? You can still edit scores individually after.')) return;
+  students.forEach((s,i)=>{
+    const r=integrity[i];
+    if(r.aiFlag||r.dupFlag){
+      scores[i]={};
+      criteria.forEach(c=>{scores[i][c.key]=0;});
+    }
+  });
+  toast('Flagged submissions zeroed. Review each one individually before finalising.');
+}
+
+// ── Side-by-side comparison modal ─────────────────────────────────────────────
+function openCompare(idxA, idxB){
+  if(idxA<0||idxB<0||idxA>=students.length||idxB>=students.length) return;
+  const sA=students[idxA], sB=students[idxB];
+  const rA=integrity[idxA], rB=integrity[idxB];
+  const sim=rA.dupSim||0;
+  const tier=dupTier(sim);
+
+  // Find shared phrases to highlight
+  const triA=tris(tokenize(sA.response||''));
+  const triB=tris(tokenize(sB.response||''));
+  const shared=sharedTrigrams(triA,triB);
+
+  // Build highlighted HTML
+  function highlightText(text, sharedPhrases){
+    if(!sharedPhrases.length) return text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // Find shared 3-word sequences and mark them
+    let highlighted = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // Sort by length descending to match longer phrases first
+    const sorted=[...sharedPhrases].sort((a,b)=>b.length-a.length);
+    const used=new Set();
+    sorted.slice(0,60).forEach(phrase=>{
+      if(used.has(phrase)) return; used.add(phrase);
+      const escaped=phrase.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      try{
+        const re=new RegExp('\\b'+escaped+'\\b','gi');
+        highlighted=highlighted.replace(re,m=>`<mark>${m}</mark>`);
+      }catch{}
+    });
+    return highlighted;
+  }
+
+  const simMatch=(rA.allMatches||[]).find(m=>m.idx===idxB);
+  const pctShared=simMatch?simMatch.sim:sim;
+
+  document.getElementById('modal-sim-summary').innerHTML=`
+    <span class="sim-big">${pctShared}%</span>
+    <div>
+      <strong class="badge ${tier.cls}">${tier.label}</strong>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">${shared.length} shared 3-word sequences found between these two submissions.</div>
+      <div style="font-size:12px;color:var(--muted)">Highlighted text below shows matching passages.</div>
+    </div>`;
+
+  document.getElementById('modal-name-a').textContent=`${sA.name} ${sA.matric?'('+sA.matric+')':''}`;
+  document.getElementById('modal-name-b').textContent=`${sB.name} ${sB.matric?'('+sB.matric+')':''}`;
+  document.getElementById('modal-text-a').innerHTML=highlightText(sA.response||'No response.',shared);
+  document.getElementById('modal-text-b').innerHTML=highlightText(sB.response||'No response.',shared);
+
+  document.getElementById('modal-mark-a').onclick=()=>{closeCompareModal();jumpToAndMark(idxA);};
+  document.getElementById('modal-mark-a').innerHTML=`<i class="fas fa-edit"></i> Mark ${sA.name.split(' ')[0]}`;
+  document.getElementById('modal-mark-b').onclick=()=>{closeCompareModal();jumpToAndMark(idxB);};
+  document.getElementById('modal-mark-b').innerHTML=`<i class="fas fa-edit"></i> Mark ${sB.name.split(' ')[0]}`;
+
+  document.getElementById('compare-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeCompareModal(){
+  document.getElementById('compare-modal').classList.remove('open');
+  document.body.style.overflow='';
+}
+function closeModal(e){
+  if(e.target===document.getElementById('compare-modal')) closeCompareModal();
+}
+
+/* ═══ AUTO MARKING ═══ */
+function autoMark(student){
+  const text=student.response||'';
+  const t=text.toLowerCase();
+  const wc=text.split(/\s+/).filter(w=>w).length;
+  const result={};
+
+  criteria.forEach(crit=>{
+    const critWords=crit.label.toLowerCase().match(/\b[a-z]{4,}\b/g)||[];
+    const found=critWords.filter(w=>t.includes(w));
+    const coverage=critWords.length?found.length/critWords.length:0;
+    const hasCite=/[A-Z][a-z]+\s*\((?:19|20)\d{2}\)/.test(text);
+    const hasExample=/for example|for instance|such as|e\.g\.|nigeria|lagos|ibadan/.test(t);
+    const hasAnalysis=/because|therefore|reason|explain|shows|demonstrates|suggests|thus/.test(t);
+    let raw=coverage*crit.max;
+    if(hasExample) raw=Math.min(crit.max, raw*1.12);
+    if(hasAnalysis) raw=Math.min(crit.max, raw*1.1);
+    if(hasCite&&/reference|study|source|literature|research|citation/.test(crit.label.toLowerCase())) raw=Math.min(crit.max,raw*1.2);
+    const sc=Math.min(crit.max,Math.max(0,Math.round(raw*2)/2));
+    const pct=crit.max>0?sc/crit.max:0;
+    const level=pct>=0.75?'good':pct>=0.4?'partial':'weak';
+    const hint=level==='good'?`Strong response — ${Math.round(coverage*100)}% of key concepts present.`:level==='partial'?`Partial response — ${Math.round(coverage*100)}% of key concepts found. Review carefully.`:`Weak response — only ${Math.round(coverage*100)}% of key concepts found.`;
+    result[crit.key]={score:sc,level,hint,found:found.slice(0,8),max:crit.max};
+  });
+
+  const minWc=courseInfo.totalMarks>=20?400:150;
+  if(wc<minWc) result._wc=`Only ${wc} words — a fuller response is expected.`;
+  return result;
+}
+
+function runAutoMark(){
+  showStep('step-progress');
+  const list=document.getElementById('prog-list');
+  list.innerHTML=students.map((s,i)=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted);flex-shrink:0">${i+1}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div><div style="font-size:11px;color:var(--muted)">${s.matric||s.filename||'no id'}</div></div>
+      <div id="ps${i}" style="font-size:12px;color:var(--muted)">Waiting...</div>
+    </div>`).join('');
+  let i=0;
+  function next(){
+    if(i>=students.length){setTimeout(()=>{buildJumpSelect();current=0;showStep('step-mark');renderStudent();},400);return;}
+    document.getElementById('ps'+i).innerHTML='<i class="fas fa-spinner fa-spin" style="color:var(--blue)"></i>';
+    setTimeout(()=>{
+      const res=autoMark(students[i]);
+      autoRes[i]=res; scores[i]={};
+      criteria.forEach(c=>{if(res[c.key]) scores[i][c.key]=res[c.key].score;});
+      document.getElementById('ps'+i).innerHTML='<span style="color:var(--green);font-weight:500"><i class="fas fa-check"></i> Done</span>';
+      const pct=Math.round((i+1)/students.length*100);
+      document.getElementById('prog-bar').style.width=pct+'%';
+      document.getElementById('prog-text').textContent=`${i+1} of ${students.length} complete`;
+      i++;next();
+    },50);
+  }
+  next();
+}
+
+/* ═══ JUMP SELECT ═══ */
+function buildJumpSelect(){
+  const sel=document.getElementById('jump-select');
+  sel.innerHTML=students.map((s,i)=>`<option value="${i}">${i+1}. ${s.name}${s.matric?' ('+s.matric+')':''}</option>`).join('');
+}
+
+/* ═══ RENDER CARD ═══ */
+function renderStudent(){
+  const s=students[current];
+  const totalMax=courseInfo.totalMarks||20;
+  const passMark=courseInfo.passMark||Math.round(totalMax/2);
+  const total=getTotal(current);
+  const grade=getGrade(total);
+  const ir=integrity[current]||{};
+  const ar=autoRes[current]||{};
+
+  document.getElementById('jump-select').value=current;
+  document.getElementById('mark-progress').textContent=`${current+1} of ${students.length}`;
+  document.getElementById('btn-prev').disabled=current===0;
+  document.getElementById('btn-next').innerHTML=current===students.length-1?'Finish & view results <i class="fas fa-chart-bar"></i>':'Next <i class="fas fa-arrow-right"></i>';
+
+  // Flags
+  let flags='';
+  if(ir.aiFlag) flags+=`<div class="fbanner fai"><i class="fas fa-robot"></i><div><strong>AI writing flagged (${ir.aiScore}%)</strong><br>${ir.aiHits.slice(0,3).join('; ')}</div></div>`;
+  if(ir.dupFlag){
+    const tier=dupTier(ir.dupSim);
+    const allMatchBanners=(ir.allMatches||[]).filter(m=>m.sim>=35).map(m=>{
+      const mt=dupTier(m.sim);
+      return `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 12px;background:rgba(0,0,0,.12);border-radius:var(--rs);flex-wrap:wrap">
+        <i class="fas fa-user" style="flex-shrink:0"></i>
+        <div>
+          <div style="font-size:14px;font-weight:700">This submission is ${m.sim}% the same as <span style="text-decoration:underline">${m.name}</span>'s submission</div>
+          <div style="font-size:12px;opacity:.85">${mt.label}</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap">
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);color:inherit" onclick="openCompare(${current},${m.idx})"><i class="fas fa-balance-scale"></i> Compare side by side</button>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);color:inherit" onclick="jumpTo(${m.idx})"><i class="fas fa-edit"></i> Mark ${m.name.split(' ')[0]}</button>
+        </div>
+      </div>`;
+    }).join('');
+    flags+=`<div class="fbanner fdup"><div style="width:100%"><strong><i class="fas fa-clone"></i> Duplicate detected — ${tier.label}</strong>${allMatchBanners}</div></div>`;
+  }
+  if(ar._wc) flags+=`<div class="fbanner fwc"><i class="fas fa-exclamation-circle"></i><strong>Word count:</strong> ${ar._wc}</div>`;
+  if(!ir.aiFlag&&!ir.dupFlag&&!ar._wc) flags+=`<div class="fbanner fclean"><i class="fas fa-check-circle"></i><div><strong>No integrity flags raised</strong></div></div>`;
+
+  // Rubric rows — update scores only, not full re-render
+  const rubricRows=criteria.map(crit=>{
+    const r=ar[crit.key]||{};
+    const val=scores[current][crit.key]!==undefined?scores[current][crit.key]:'';
+    const hintCls=r.level==='good'?'h-good':r.level==='partial'?'h-partial':'h-weak';
+    const hintHtml=r.hint?`<div class="auto-hint ${hintCls}"><i class="fas fa-${r.level==='good'?'check-circle':r.level==='partial'?'exclamation-circle':'times-circle'}"></i> ${r.hint}</div>`:'';
+    const kchips=(r.found||[]).length?`<div class="kchips">${r.found.map(k=>`<span class="kchip kfound">✓ ${k}</span>`).join('')}</div>`:'';
+    const steps=[0];
+    if(crit.max>2) steps.push(Math.round(crit.max/2*2)/2);
+    steps.push(crit.max);
+    const unique=[...new Set(steps)];
+    const qbtns=unique.map(v=>`<button class="qbtn${parseFloat(val)===v?' sel':''}" onclick="qs('${crit.key}',${v},${crit.max})">${v}</button>`).join('');
+    return `<div class="rubric-row">
+      <div class="rrow-top"><div class="rlabel">${crit.label}</div><div class="rmax-tag">/ ${crit.max} marks</div></div>
+      ${hintHtml}${kchips}
+      <div class="score-row">${qbtns}<input type="number" class="sinput" id="si${crit.key}" min="0" max="${crit.max}" step="0.5" value="${val}" placeholder="—" oninput="ss('${crit.key}',this.value,${crit.max})"><span style="font-size:11px;color:var(--muted)">/ ${crit.max}</span></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('student-card').innerHTML=`
+    <div class="card">
+      <div class="card-hd">
+        <div><div class="sname">${s.name}</div><div class="smeta">${s.matric||s.filename||'No ID'} · Student ${current+1} of ${students.length} · ${ir.wc||0} words</div></div>
+        <span class="badge b-blue">${courseInfo.code||''} ${courseInfo.assignment||''}</span>
+      </div>
+      <div class="flags">${flags}</div>
+      <div class="resp-lbl">Student response</div>
+      <div class="resp-box">${(s.response||'No response submitted.').replace(/</g,'&lt;').replace(/>/g,'&gt;').substring(0,3000)}${(s.response||'').length>3000?'\n\n[Response truncated for display — full text used for auto marking]':''}</div>
+      <p class="sec-title" style="margin-top:2px">Marking rubric — auto scores pre-filled · review and adjust each score</p>
+      ${rubricRows}
+      <div class="total-bar">
+        <span class="tlbl">Total score</span>
+        <span class="tval ${total>=passMark?'pass':'fail'}" id="rt">${fmt(total)} / ${totalMax} &nbsp;&nbsp; Grade: ${grade}</span>
+      </div>
+      <div class="fb-lbl">Feedback for student <span style="color:var(--hint);font-weight:400">(optional — included in CSV export)</span></div>
+      <textarea class="fb-area" placeholder="Write your feedback here..." oninput="feedback[${current}]=this.value">${feedback[current]||''}</textarea>
+    </div>`;
+}
+
+function qs(key,val,max){
+  scores[current][key]=val;
+  const inp=document.getElementById('si'+key);
+  if(inp) inp.value=val;
+  rt();
+  // Update only quick buttons to avoid full re-render flicker
+  document.querySelectorAll(`.rubric-row .score-row .qbtn`).forEach(btn=>{
+    const k=btn.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    if(k===key) btn.classList.toggle('sel', parseFloat(btn.textContent)===val);
+  });
+}
+function ss(key,val,max){
+  const v=parseFloat(val);
+  const inp=document.getElementById('si'+key);
+  if(isNaN(v)||val===''){delete scores[current][key];if(inp)inp.classList.remove('over');}
+  else{const c=Math.min(max,Math.max(0,v));scores[current][key]=c;if(inp)inp.classList.toggle('over',v>max);}
+  rt();
+}
+function rt(){
+  const t=getTotal(current),g=getGrade(t),el=document.getElementById('rt');
+  if(el){el.textContent=`${fmt(t)} / ${courseInfo.totalMarks||20}   Grade: ${g}`;el.className='tval '+(t>=(courseInfo.passMark||10)?'pass':'fail');}
+}
+function getTotal(i){return Object.values(scores[i]||{}).reduce((a,b)=>a+(parseFloat(b)||0),0)}
+function getGrade(t){
+  const max=courseInfo.totalMarks||20, g=courseInfo.grades||{a:70,b:55,c:45,d:35};
+  const p=t/max*100;
+  return p>=g.a?'A':p>=g.b?'B':p>=g.c?'C':p>=g.d?'D':'F';
+}
+function fmt(n){return Math.round(n*10)/10}
+function navigate(dir){const n=current+dir;if(n<0) return;if(n>=students.length){goToResults();return;}current=n;renderStudent();}
+function jumpTo(i){current=i;buildJumpSelect();renderStudent();}
+
+/* ═══ RESULTS ═══ */
+let resData=[];
+function goToResults(){
+  resData=students.map((s,i)=>{
+    const t=fmt(getTotal(i)), g=getGrade(getTotal(i));
+    const ir=integrity[i]||{};
+    return{...s,idx:i,t,g,pass:getTotal(i)>=(courseInfo.passMark||10),ir};
+  });
+  renderResults();
+  showStep('step-results');
+}
+function renderResults(){
+  const totalMax=courseInfo.totalMarks||20;
+  let sum=0,passed=0,aiF=0,dupF=0;
+  const filtered=resFilter?resData.filter(s=>s.name.toLowerCase().includes(resFilter.toLowerCase())):resData;
+  filtered.forEach(s=>{sum+=parseFloat(s.t);if(s.pass)passed++;if(s.ir.aiFlag)aiF++;if(s.ir.dupFlag)dupF++;});
+  const avg=filtered.length?fmt(sum/filtered.length):0;
+  document.getElementById('res-sub').textContent=`${courseInfo.code||''} — ${courseInfo.assignment||'Assignment'} — ${students.length} submissions`;
+  document.getElementById('res-stats').innerHTML=`<div class="stat-grid">
+    <div class="scard"><span class="sval">${students.length}</span><span class="slbl">Submissions</span></div>
+    <div class="scard"><span class="sval">${avg}</span><span class="slbl">Class average</span></div>
+    <div class="scard"><span class="sval" style="color:var(--green)">${passed}</span><span class="slbl">Passed</span></div>
+    <div class="scard"><span class="sval" style="color:var(--red)">${students.length-passed}</span><span class="slbl">Failed</span></div>
+    <div class="scard"><span class="sval" style="color:var(--amber)">${aiF}</span><span class="slbl">AI flagged</span></div>
+    <div class="scard"><span class="sval" style="color:var(--orange)">${dupF}</span><span class="slbl">Duplicates</span></div>
+  </div>`;
+  document.getElementById('res-tbody').innerHTML=filtered.map(s=>`<tr>
+    <td style="font-weight:600">${s.name}</td>
+    <td style="color:var(--muted)">${s.matric||s.filename||'—'}</td>
+    <td style="font-weight:700">${s.t}/${totalMax}</td>
+    <td><span class="gpill g${s.g}">${s.g}</span></td>
+    <td class="${s.pass?'pass-t':'fail-t'}">${s.pass?'Pass':'Fail'}</td>
+    <td style="color:var(--muted)">${s.ir.wc||0}</td>
+    <td>${s.ir.aiFlag?`<span class="badge b-amber"><i class="fas fa-robot"></i>${s.ir.aiScore}%</span>`:'<span class="badge b-green">Clear</span>'}</td>
+    <td>${s.ir.dupFlag?`<div><span class="badge b-orange" style="font-size:12px"><i class="fas fa-clone"></i> ${s.ir.dupSim}% match</span><div style="font-size:12px;font-weight:600;color:var(--red);margin-top:3px">with ${s.ir.dupMatch}</div></div>`:'<span class="badge b-green">Unique</span>'}</td>
+    <td><button class="btn btn-sm" onclick="jumpTo(${s.idx});showStep('step-mark')">Edit</button></td>
+  </tr>`).join('');
+}
+function filterResults(q){resFilter=q;renderResults();}
+function sortRes(col){
+  resSort.dir=resSort.col===col?-resSort.dir:1; resSort.col=col;
+  resData.sort((a,b)=>{
+    if(col==='name') return resSort.dir*(a.name.localeCompare(b.name));
+    if(col==='matric') return resSort.dir*((a.matric||'').localeCompare(b.matric||''));
+    if(col==='score') return resSort.dir*(parseFloat(a.t)-parseFloat(b.t));
+    if(col==='grade') return resSort.dir*(a.g.localeCompare(b.g));
+    if(col==='result') return resSort.dir*(a.pass===b.pass?0:a.pass?-1:1);
+    if(col==='words') return resSort.dir*((a.ir.wc||0)-(b.ir.wc||0));
+    if(col==='ai') return resSort.dir*((a.ir.aiScore||0)-(b.ir.aiScore||0));
+    if(col==='dup') return resSort.dir*((a.ir.dupSim||0)-(b.ir.dupSim||0));
+    return 0;
+  });
+  renderResults();
+}
+
+/* ═══ EXPORT ═══ */
+function exportCSV(){
+  const ch=criteria.map(c=>`"${c.label.substring(0,50).replace(/"/g,"'")} (max ${c.max})"`);
+  const hd=['Name','ID/Matric','Department','Course','Assignment','Session','Total Score','Max Marks','%','Grade','Pass/Fail','Word Count','AI Flag','AI Score%','Duplicate','Dup Match','Dup Sim%','Feedback',...ch];
+  const rows=students.map((s,i)=>{
+    const t=fmt(getTotal(i)),g=getGrade(getTotal(i)),ir=integrity[i]||{},sc=scores[i]||{};
+    const pct=fmt((getTotal(i)/(courseInfo.totalMarks||20))*100);
+    const fb=(feedback[i]||'').replace(/"/g,"''");
+    return [`"${s.name}"`,`"${s.matric||s.filename||''}"`,`"${courseInfo.department||''}"`,`"${courseInfo.code||''} ${courseInfo.title||''}"`,`"${courseInfo.assignment||''}"`,`"${courseInfo.session||''}"`,t,courseInfo.totalMarks||20,pct,g,getTotal(i)>=(courseInfo.passMark||10)?'Pass':'Fail',ir.wc||0,ir.aiFlag?'YES':'NO',ir.aiScore||0,ir.dupFlag?'YES':'NO',`"${ir.dupMatch||''}"`,ir.dupSim||0,`"${fb}"`, ...criteria.map(c=>sc[c.key]!==undefined?sc[c.key]:'')].join(',');
+  });
+  const csv=[hd.join(','),...rows].join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url; a.download=`${(courseInfo.code||'Assignment').replace(/\s/g,'_')}_Results.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('Results downloaded.');
+}
+
+/* ═══ EVENTS ═══ */
+function bindDZ(dzId,fiId,handler){
+  const dz=document.getElementById(dzId), fi=document.getElementById(fiId);
+  fi.addEventListener('change',e=>{if(fi.accept.includes('multiple')||fi.multiple){if(e.target.files.length) handler(Array.from(e.target.files));}else{if(e.target.files[0]) handler(e.target.files[0]);}});
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const f=Array.from(e.dataTransfer.files);if(f.length){if(fi.accept.includes('multiple')||fi.multiple) handler(f); else handler(f[0]);}});
+}
+bindDZ('csv-dz','csv-fi',processCSV);
+bindDZ('files-dz','files-fi',processFiles);
+bindDZ('guide-dz','guide-fi',processGuideFile);
+document.getElementById('total-marks').addEventListener('input',updateCritSum);
+</script>
+</body>
+</html>
